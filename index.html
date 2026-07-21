@@ -2,35 +2,62 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOORUP PRO</title>
   <style>
-    body {
-      margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: #121212; color: #fff; font-family: 'Segoe UI', sans-serif;
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background: #121212; color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    #loader {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 1; background: #121212; transition: opacity 0.3s ease;
     }
     .spinner {
-      width: 34px; height: 34px; border: 3px solid #333; border-top-color: #1db954;
-      border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+      width: 38px; height: 38px; border: 3px solid #282828; border-top-color: #1db954;
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    p { color: #888; font-size: 0.9rem; }
+    p { color: #888; font-size: 0.9rem; margin: 0; }
+    iframe {
+      width: 100%; height: 100%; border: none;
+      position: absolute; top: 0; left: 0; z-index: 2;
+    }
   </style>
 </head>
 <body>
-  <div style="text-align:center;">
+
+  <!-- Pantalla de carga estética mientras carga Apps Script -->
+  <div id="loader">
     <div class="spinner"></div>
     <p>Abriendo DOORUP PRO...</p>
   </div>
 
+  <!-- El contenedor de la app -->
+  <iframe id="app-frame" allow="autoplay"></iframe>
+
   <script>
-    // ⚠️ REEMPLAZA esta URL por la de TU implementación de Apps Script
-    // (Implementar → Administrar implementaciones → copiar la URL que termina en /exec)
+    // Tu URL base de Apps Script
     var URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzCWv1vwJRhrWIXknFhYaAMpyHlzBRLLFUwdQCPfuJaX85Np87YK5Txi-5Se4iZYGtK/exec";
 
-    // Esto es lo importante: reenvía TODO lo que venga en la URL (por ejemplo
-    // ?playlist=abc123) hacia Apps Script — si esto faltara, el link de
-    // WhatsApp abriría el sitio pero sin la playlist compartida cargada.
-    window.location.replace(URL_APPS_SCRIPT + window.location.search);
+    // Captura los parámetros que vienen en la barra de direcciones (?playlist=xyz, etc.)
+    var queryParams = window.location.search;
+
+    // Asigna la URL completa con parámetros al src del iframe
+    var iframe = document.getElementById("app-frame");
+    iframe.src = URL_APPS_SCRIPT + queryParams;
+
+    // Oculta el loader cuando el iframe termine de cargar
+    iframe.onload = function() {
+      var loader = document.getElementById("loader");
+      if (loader) {
+        loader.style.opacity = "0";
+        setTimeout(function() { loader.style.display = "none"; }, 300);
+      }
+    };
   </script>
 </body>
 </html>
