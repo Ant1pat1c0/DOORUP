@@ -43,22 +43,51 @@
   <iframe id="app-frame" allow="autoplay"></iframe>
 
   <script>
-    // Tu URL base de Apps Script
+    // URL base del web-app de Apps Script (deployment que usa la familia/APK).
     var URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxhhNvdm9NHRTq1Wxq3OT61jmeEmyWIcaiMAnhM3t6tgzi2YknueZlW6JbttNFYr05a/exec";
 
-    // Captura los parámetros que vienen en la barra de direcciones (?playlist=xyz, etc.)
-    var queryParams = window.location.search;
+    // Parámetros que vienen en la URL (?playlist=xyz, ?sala=K3F9, ...).
+    var queryParams = window.location.search; // "" | "?playlist=abc"
 
-    // Asigna la URL completa con parámetros al src del iframe
     var iframe = document.getElementById("app-frame");
-    iframe.src = URL_APPS_SCRIPT + queryParams;
+    var lanzado = false;
 
-    // Oculta el loader cuando el iframe termine de cargar
-    iframe.onload = function() {
+    // ── ROMPE-CACHÉ ────────────────────────────────────────────────────────
+    // El WebView de la TV cachea el documento de Apps Script de forma agresiva
+    // (WebViews viejos ignoran el header no-store). Como cachean POR URL, le
+    // agregamos ?v=<version> a la URL del iframe: cada deploy cambia el valor
+    // -> cache-miss forzado -> codigo fresco. El numero sale de version.txt,
+    // que leemos SIEMPRE fresco (URL unica por timestamp + cache:no-store).
+    //
+    // Importante: ?v= va en la URL de script.google.com (el iframe EXTERNO).
+    // NO toca el origen del iframe INTERNO (*.googleusercontent.com), que es
+    // donde vive el localStorage de la sesion (PIN, favoritos, persona). Por
+    // eso romper cache aca NO borra la sesion. Ver CACHE_BUSTING.md.
+    function armarSrc(version) {
+      if (!version) return URL_APPS_SCRIPT + (queryParams || "");
+      var extra = queryParams ? "&" + queryParams.slice(1) : "";
+      return URL_APPS_SCRIPT + "?v=" + encodeURIComponent(version) + extra;
+    }
+
+    function lanzar(version) {
+      if (lanzado) return;
+      lanzado = true;
+      iframe.src = armarSrc(version);
+    }
+
+    fetch("version.txt?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (t) { lanzar((t || "").trim().split(/\s+/)[0]); })
+      .catch(function () { lanzar(""); }); // sin red / fallo -> carga sin ?v= (lo que haya en cache)
+
+    // Red de seguridad: si version.txt tarda demasiado, no dejamos el spinner colgado.
+    setTimeout(function () { lanzar(""); }, 4000);
+
+    iframe.onload = function () {
       var loader = document.getElementById("loader");
       if (loader) {
         loader.style.opacity = "0";
-        setTimeout(function() { loader.style.display = "none"; }, 300);
+        setTimeout(function () { loader.style.display = "none"; }, 300);
       }
     };
   </script>
@@ -66,10 +95,10 @@
   <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker registrado correctamente'))
-      .catch(err => console.error('Error al registrar SW:', err));
+      .then(function () { console.log('Service Worker registrado'); })
+      .catch(function (err) { console.error('Error al registrar SW:', err); });
   }
 </script>
-  
+
 </body>
 </html>
