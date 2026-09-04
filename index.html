@@ -75,13 +75,28 @@
       iframe.src = armarSrc(version);
     }
 
-    fetch("version.txt?_=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error("http " + r.status)); })
-      .then(function (t) { lanzar((t || "").trim().split(/\s+/)[0]); })
-      .catch(function () { lanzar(""); }); // sin red / fallo -> carga sin ?v= (lo que haya en cache)
+    // Pide version.txt con reintentos: un boot en frío de TV puede tardar
+    // varios segundos en tener Wi-Fi/DNS listos, y un solo intento fallido
+    // ahí tiraba directo al fallback sin ?v= (justo el bug que este archivo
+    // existe para evitar — ver CACHE_BUSTING.md).
+    function pedirVersion(intentosRestantes) {
+      return fetch("version.txt?_=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error("http " + r.status)); })
+        .then(function (t) { return (t || "").trim().split(/\s+/)[0]; })
+        .catch(function (err) {
+          if (intentosRestantes > 0) return pedirVersion(intentosRestantes - 1);
+          throw err;
+        });
+    }
 
-    // Red de seguridad: si version.txt tarda demasiado, no dejamos el spinner colgado.
-    setTimeout(function () { lanzar(""); }, 4000);
+    pedirVersion(2) // 1 intento + hasta 2 reintentos
+      .then(function (v) { lanzar(v); })
+      .catch(function () { lanzar(""); }); // sin red tras los reintentos -> carga sin ?v= (lo que haya en cache)
+
+    // Red de seguridad final: no dejamos el spinner colgado para siempre si
+    // de verdad no hay conexión. Más margen que antes (era 4s) para darle
+    // tiempo a los reintentos en un boot en frío.
+    setTimeout(function () { lanzar(""); }, 8000);
 
     iframe.onload = function () {
       var loader = document.getElementById("loader");
