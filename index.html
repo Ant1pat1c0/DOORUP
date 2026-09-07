@@ -39,8 +39,13 @@
     <p>Abriendo DOORUP PRO...</p>
   </div>
 
-  <!-- El contenedor de la app -->
-  <iframe id="app-frame" allow="autoplay"></iframe>
+  <!-- El contenedor de la app.
+       allow= delega Permissions Policy al iframe de Apps Script (y de ahí al
+       iframe interno de googleusercontent.com). Sin clipboard-write / web-share
+       acá, "Copiar link" y el share nativo NO funcionan en producción (2
+       iframes de profundidad); en el /dev de Apps Script sí, porque ahí es
+       top-level y hay un hop menos. -->
+  <iframe id="app-frame" allow="autoplay; clipboard-write; web-share"></iframe>
 
   <script>
     // URL base del web-app de Apps Script (deployment que usa la familia/APK).
