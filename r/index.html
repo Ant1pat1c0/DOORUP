@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🎁 Un momento para ti</title>
+
+  <!-- Preview al compartir (Open Graph / Twitter). ESTÁTICO a propósito:
+       el mismo para TODOS los regalos, no revela canción ni remitente.
+       El código del regalo viaja en el fragmento (#…), que los crawlers
+       ignoran → scrapean esta página UNA sola vez. Ver REGALAR_MOMENTO.md. -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="🎁 Alguien te dejó un momento">
+  <meta property="og:description" content="Una canción, elegida para ti. Ábrela cuando tengas un rato para escucharla entera.">
+  <meta property="og:image" content="https://ant1pat1c0.github.io/DOORUP/og-regalo.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Un regalo envuelto">
+  <meta property="og:url" content="https://ant1pat1c0.github.io/DOORUP/r/">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="🎁 Alguien te dejó un momento">
+  <meta name="twitter:description" content="Una canción, elegida para ti. Ábrela cuando tengas un rato para escucharla entera.">
+  <meta name="twitter:image" content="https://ant1pat1c0.github.io/DOORUP/og-regalo.jpg">
+
+  <meta name="theme-color" content="#0a0a12">
+  <meta name="robots" content="noindex">
+
+  <style>
+    html, body {
+      margin: 0; height: 100%; overflow: hidden;
+      background: radial-gradient(ellipse at 50% 45%, #241a3a 0%, #0a0a12 72%);
+      color: #fff; font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .c {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      text-align: center; padding: 24px;
+    }
+    .g { font-size: 3.6rem; animation: latido 2.2s ease-in-out infinite; }
+    @keyframes latido { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    p { color: #9a9aab; font-size: 0.95rem; margin: 0; }
+    a { color: #e0c48a; }
+  </style>
+</head>
+<body>
+  <div class="c">
+    <div class="g">🎁</div>
+    <p id="m">Abriendo tu momento…</p>
+    <noscript>
+      <p>Activa JavaScript para abrir tu regalo. <a href="/DOORUP/">Abrir DOORUP</a></p>
+    </noscript>
+  </div>
+
+  <script>
+    (function () {
+      // El código va en el fragmento para que nunca llegue a ningún log y
+      // para que los crawlers scrapeen /r/ una sola vez (ignoran el #).
+      var c = (location.hash || '').replace(/^#/, '').trim();
+      if (/^[A-Za-z0-9]{10,40}$/.test(c)) {
+        // replace() para no dejar /r/ en el historial (el "Atrás" no vuelve acá).
+        location.replace('/DOORUP/?regalo=' + encodeURIComponent(c));
+      } else {
+        document.getElementById('m').textContent = 'Este enlace no está completo.';
+        setTimeout(function () { location.replace('/DOORUP/'); }, 1600);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -14,8 +14,8 @@
 //
 // Ver CACHE_BUSTING.md en el repo del pipeline.
 
-const CACHE = 'doorup-shell-v1'; // subir el numero purga los caches viejos
-const SHELL = ['./', './index.html', './manifest.json'];
+const CACHE = 'doorup-shell-v2'; // subir el numero purga los caches viejos
+const SHELL = ['./', './index.html', './manifest.json', './r/', './r/index.html'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
